@@ -1,22 +1,25 @@
-import pytest
+import unittest
 from src.context_manager import CarbonContextManager
 
-def test_context_manager_math_precision():
-    """
-    Verifies that the O(1) engine maps and calculates metrics correctly.
-    """
-    mock_input = {
-        "location": "Delhi, India",
-        "transport_mode": "electric_vehicle",
-        "daily_distance_km": 10,
-        "diet": "vegan"
-    }
+class TestCarbonIntelligencePipeline(unittest.TestCase):
     
-    manager = CarbonContextManager(mock_input)
-    results = manager.process_user_metrics()
-    
-    # Expected: (0.05 factor * 10km) + 1.5 diet factor = 2.00 kg
-    assert results["total_co2_kg"] == 2.00
-    assert results["breakdown"]["transportation_co2"] == 0.50
-    assert results["breakdown"]["diet_co2"] == 1.50
-    assert results["user_location"] == "Delhi, India"
+    def setUp(self):
+        self.manager = CarbonContextManager()
+
+    def test_household_context_parsing(self):
+        raw_data = {"sector": "household", "region": "Delhi", "energy_usage_kwh": "350"}
+        processed = self.manager.process_user_context(raw_data)
+        
+        self.assertEqual(processed["sector"], "household")
+        self.assertEqual(processed["region"], "Delhi")
+        self.assertEqual(processed["scale_factor"], 1.0)
+
+    def test_manufacturing_scale_logic(self):
+        raw_data = {"sector": "manufacturing", "energy_usage_kwh": "12000"}
+        processed = self.manager.process_user_context(raw_data)
+        
+        self.assertEqual(processed["sector"], "manufacturing")
+        self.assertEqual(processed["scale_factor"], 1.5)
+
+if __name__ == '__main__':
+    unittest.main()

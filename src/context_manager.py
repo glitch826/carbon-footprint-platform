@@ -1,47 +1,26 @@
+from typing import Dict, Any
+
 class CarbonContextManager:
-    """
-    Manages and parses dynamic user context profiles to compute localized 
-    carbon footprints with O(1) calculation efficiency.
-    """
-    def __init__(self, user_profile: dict):
-        self.user_profile = user_profile
-        
-        # Standardized emission constants (kg CO2 per unit metric)
-        self.emission_factors = {
-            "transport": {
-                "electric_vehicle": 0.05,
-                "public_transit": 0.08,
-                "petrol_car": 0.22,
-                "diesel_car": 0.25,
-                "walk_or_cycle": 0.00
-            },
-            "diet": {
-                "vegan": 1.5,
-                "vegetarian": 2.0,
-                "non_vegetarian": 4.5
-            }
-        }
+    """Manages and categorizes user context for customized carbon intelligence calculation."""
+    
+    def __init__(self):
+        self.supported_sectors = ["household", "corporate", "manufacturing"]
 
-    def process_user_metrics(self) -> dict:
+    def process_user_context(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Extracts user features and maps them to emission baselines dynamically.
+        Validates and enriches user context data to enable logical decision-making.
         """
-        location = self.user_profile.get("location", "Global")
-        transport = self.user_profile.get("transport_mode", "walk_or_cycle")
-        distance = float(self.user_profile.get("daily_distance_km", 0))
-        diet = self.user_profile.get("diet", "vegetarian")
-
-        # High-speed safe lookup map
-        transport_impact = self.emission_factors["transport"].get(transport, 0.0) * distance
-        diet_impact = self.emission_factors["diet"].get(diet, 2.0)
-        
-        total_score = transport_impact + diet_impact
-
-        return {
-            "user_location": location,
-            "total_co2_kg": round(total_score, 2),
-            "breakdown": {
-                "transportation_co2": round(transport_impact, 2),
-                "diet_co2": round(diet_impact, 2)
-            }
+        sector = raw_data.get("sector", "household").lower()
+        if sector not in self.supported_sectors:
+            sector = "household"
+            
+        # Structure the context dictionary with strict defaults for the agent
+        enriched_context = {
+            "sector": sector,
+            "region": raw_data.get("region", "Global"),
+            "energy_usage_kwh": float(raw_data.get("energy_usage_kwh", 0.0)),
+            "transport_miles": float(raw_data.get("transport_miles", 0.0)),
+            "waste_kg": float(raw_data.get("waste_kg", 0.0)),
+            "scale_factor": 1.5 if sector == "manufacturing" else (1.2 if sector == "corporate" else 1.0)
         }
+        return enriched_context
